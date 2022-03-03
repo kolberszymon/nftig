@@ -10,9 +10,11 @@ import { useEffect } from "react";
 function MyApp({ Component, pageProps }) {
   return (
     <SdkWalletConnector connector={connector}>
-      {(sdk, wallet, connection) => {
+      {(sdk, wallet, connection, buttons) => {
         return (
-          <SDKContext.Provider value={{ sdk, wallet, connection }}>
+          <SDKContext.Provider
+            value={{ sdk, wallet, connection, BUTTONS: buttons }}
+          >
             <Component {...pageProps} />
           </SDKContext.Provider>
         );

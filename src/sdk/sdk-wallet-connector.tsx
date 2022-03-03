@@ -1,5 +1,5 @@
 import { Rx, useRxOrThrow } from "@rixio/react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { from } from "rxjs";
 import { createRaribleSdk } from "@rarible/sdk";
 import type { ConnectionState, IConnector } from "@rarible/connector";
@@ -9,63 +9,71 @@ import { WalletAndAddress } from "./connectors-setup";
 
 export type ConnectorComponentProps = {
   connector: IConnector<string, WalletAndAddress>;
-  children: (sdk: IRaribleSdk, walletAddress: Maybe<string>) => JSX.Element;
+  children: (
+    sdk: Maybe<IRaribleSdk>,
+    walletAddress: Maybe<string>,
+    connection: any,
+    buttons: any
+  ) => JSX.Element;
 };
 
 export function SdkWalletConnector({
   connector,
   children,
 }: ConnectorComponentProps) {
+  const [buttons, setButtons] = useState({
+    Metamask: <div></div>,
+    fcl: <div></div>,
+  });
+  // const [conn, setConn] = useState(connector.connection);
   const conn = useRxOrThrow(connector.connection);
 
-  if (conn.status === "disconnected" || conn.status === "connecting") {
-    return (
-      <div className="h-screen w-full flex justify-center items-center">
-        <Options connector={connector} connectionState={conn} />
-      </div>
-    );
-  } else if (conn.status === "initializing") {
-    return <p>Initializing...</p>;
-  } else {
-    const sdk = createRaribleSdk(conn.connection.wallet, "staging");
-    return (
-      <div>
-        {conn.disconnect && (
-          <button onClick={conn.disconnect}>disconnect</button>
-        )}
-        {children(sdk, conn.connection.address)}
-      </div>
-    );
-  }
+  useEffect(() => {
+    getButtons();
+  }, []);
+
+  const getButtons = async () => {
+    let buttons = await createWalletButtons(connector);
+    setButtons(buttons);
+  };
+
+  return <div>{children(null, null, conn, buttons)}</div>;
 }
 
-interface OptionsProps<C> {
-  connector: IConnector<string, C>;
-  connectionState: ConnectionState<C>;
-}
+async function createWalletButtons(connector) {
+  const options = await connector.getOptions();
 
-function Options<C>({ connector, connectionState }: OptionsProps<C>) {
-  const options$ = useMemo(() => from(connector.getOptions()), [connector]);
-  return (
-    <Rx value$={options$}>
-      {(options) => (
-        <div>
-          {options.map((o) => (
-            <div key={o.option}>
-              <button
-                className="p-2 border-radius border-gray-200 border-2"
-                onClick={() => connector.connect(o)}
-              >
-                Connect to {o.option}
-              </button>
-              {connectionState.status === "connecting" &&
-              connectionState.providerId === o.provider.getId()
-                ? "Connecting..."
-                : null}
-            </div>
-          ))}
+  let Buttons = {
+    Metamask: <div></div>,
+    fcl: <div></div>,
+  };
+
+  options.forEach((obj) => {
+    if (connector.connection.status === "connected") {
+      Buttons[obj.option] = (
+        <div className="p-2 border-radius border-gray-200 border-2">
+          <button onClick={() => connector.connect(obj)} key={obj.option}>
+            Connect to {obj.option}
+          </button>
         </div>
-      )}
-    </Rx>
-  );
+      );
+    } else {
+      Buttons[obj.option] = (
+        <div className="p-2 border-radius border-gray-200 border-2">
+          <button
+            onClick={() => connector.connection.disconnect()}
+            key={obj.option}
+          >
+            Disconnect from {obj.option}
+          </button>
+        </div>
+      );
+    }
+  });
+
+  console.log(Buttons);
+
+  // If we do it like that we'll be able to use it like buttons.Metamask oooh yeah
+
+  return Buttons;
 }

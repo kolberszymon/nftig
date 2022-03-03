@@ -6,10 +6,9 @@ import { PrepareMintRequest } from "@rarible/sdk/build/types/nft/mint/prepare-mi
 import { toContractAddress } from "@rarible/types";
 import { create } from "ipfs-http-client";
 
-
 // FILL IT WITH YOUR TOKEN AND USER_ID
-const LONG_LIVED_TOKEN =;
-const USER_ID = ;
+const LONG_LIVED_TOKEN = "";
+const USER_ID = "";
 const POST_PORTION = 3;
 const FETCH_IDS_URL = `https://graph.instagram.com/v13.0/${USER_ID}/media?access_token=${LONG_LIVED_TOKEN}&fields=id`;
 
@@ -35,25 +34,30 @@ const infura = {
 const ipfs = create(infura);
 
 export default function Home() {
-  const { sdk, wallet } = useSdkContext();
+  const { sdk, wallet, connection, BUTTONS } = useSdkContext();
 
   const [mediaIds, setMediaIds] = useState<Array<string>>([]);
   const [mediaDetails, setMediaDetails] = useState<Array<MediaDetails>>([]);
   const [fetchedPostPortion, setFetchedPostPortion] = useState<number>(1);
+  const [conn, setConn] = useState(connection);
 
   useEffect(() => {
-    fetchAllInstagramPostsIds();
+    // fetchAllInstagramPostsIds();
   }, []);
 
   useEffect(() => {
     if (mediaIds.length > 0) {
-      fetchPostPortion();
+      // fetchPostPortion();
     }
   }, [mediaIds]);
 
   useEffect(() => {
     console.log(mediaDetails);
   }, [mediaDetails]);
+
+  useEffect(() => {
+    console.log(conn);
+  }, [conn]);
 
   const fetchAllInstagramPostsIds = async () => {
     let { data: response } = await axios.get(FETCH_IDS_URL);
@@ -133,7 +137,10 @@ export default function Home() {
           ? "Instagram Connected ⭐️"
           : "You have to provide your long lived token in code"}
       </div>
+
       <main className="w-full h-full bg-white flex justify-center items-center py-4">
+        {BUTTONS.Metamask}
+
         <div className=" overflow-y-scroll overscroll-hidden h-full justify-start items-center flex flex-col pt-4 gap-4">
           {mediaDetails.map((mediaDetail, index) => {
             return (

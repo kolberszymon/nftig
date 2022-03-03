@@ -5,9 +5,10 @@ import { Maybe } from "../common/maybe";
 import type { ConnectionState } from "@rarible/connector";
 
 type ContextProps = {
-  sdk: IRaribleSdk;
+  sdk: Maybe<IRaribleSdk>;
   connection: ConnectionState<BlockchainWallet>;
   wallet: Maybe<string>;
+  BUTTONS: any;
 };
 
 export const SDKContext = createContext<Partial<ContextProps>>({});
